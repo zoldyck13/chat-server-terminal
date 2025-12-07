@@ -1,5 +1,5 @@
-#ifndef __LOGIN_FTXUI
-#define __LOGIN_FTXUI
+#ifndef __Register_FTXUI
+#define __Register_FTXUI
 
 #include <string>
 #include <ftxui/component/component.hpp>
@@ -10,11 +10,10 @@
 #include <ftxui/component/screen_interactive.hpp>
 #include <ftxui/dom/elements.hpp>
 #include <ftxui/util/ref.hpp>
-#include "Dbserver.hpp"
 
 using namespace ftxui;
 
-class Login {
+class Register {
 private:
     std::string user_name;
     std::string password;
@@ -24,16 +23,14 @@ private:
     Component login_button;
     Component check_box;
     Component layout;
-    Component reg_link;
+    Component sg_link;
 
     InputOption password_option;
     bool show_password = false;
 
-
 public:
 
-
-    std::function<void()> onRegister;
+    std::function<void()> onBack;
 
     //Create Style
     ButtonOption Style(){
@@ -48,7 +45,7 @@ public:
         return option;
     }
 
-    Login() {
+    Register() {
 
         // Create Inputs
         password_option.password = true;
@@ -58,64 +55,42 @@ public:
         //Create checkbox
         check_box = Checkbox("show password ", &show_password);
 
-        // Create Button once
-        login_button = Button("Login", [&] {
-            if (checkLogin(db, user_name, password))
-                std::cout << "Enter successfully\n";
-            else 
-                std::cout << "failed\n";
-        }, Style());
+        // Create Button to singin
 
-        // Create hyperlink 
-        ButtonOption link_style;
-
-        link_style.transform = [](const EntryState& state) {
-            auto elem = text(state.label) | color(Color::Blue) | underlined;
-            if (state.focused)
-                elem |= bold;
-            return elem;
-        };
-
-        reg_link = Button("Register new account", [&]{
-            if(onRegister) onRegister();
-        }, link_style);
+        sg_link = Button("Sing in", [&]{
+            if(onBack) onBack();
+        }, ButtonOption::Simple());
 
         // Create container once
         auto container = Container::Vertical({
             input_username,
             input_password,
-            login_button,
-            check_box,
-            reg_link
+            sg_link
         });
 
-        // Create renderer 
         layout = Renderer(container, [&] {
-
             InputOption opt;
             opt.password = !show_password;
 
             input_password = Input(&password, "Password", opt);
 
-            return vbox({
-                text("Admin Login UI"),
-                separator(),
-                hbox(text("Username: "), input_username->Render()),
-                hbox(text("Password: "), input_password->Render()),
-                separator(),
-                login_button->Render(),
-                separator(),
-                check_box->Render(),
-                separator(),
-                reg_link->Render()
+                return vbox({
+                    text("This is the register page!"),
+                    separator(),
+                    hbox(text("Username: "), input_username->Render()),
+                    hbox(text("Password: "), input_password->Render()),
+                    separator(),
+                    sg_link->Render()
 
-            }) | border | center | vcenter;
-        });
-    }
+                }) | border | center | vcenter;
+            });
+
+}
 
     
 
-    Component RenderLogin() {
+    
+    Component RenderRegister() {
         return layout;
     }
 };
