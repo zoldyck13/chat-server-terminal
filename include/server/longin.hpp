@@ -24,6 +24,7 @@ private:
     Component login_button;
     Component check_box;
     Component layout;
+    Component reg_link;
 
     InputOption password_option;
     bool show_password = false;
@@ -61,12 +62,25 @@ public:
                 std::cout << "failed\n";
         }, Style());
 
+        // Create hyperlink 
+        ButtonOption link_style;
+
+        link_style.transform = [](const EntryState& state) {
+            auto elem = text(state.label) | color(Color::Blue) | underlined;
+            if (state.focused)
+                elem |= bold;
+            return elem;
+        };
+
+        reg_link = Button("Register new account", [&]{}, link_style);
+
         // Create container once
         auto container = Container::Vertical({
             input_username,
             input_password,
             login_button,
-            check_box
+            check_box,
+            reg_link
         });
 
         // Create renderer 
@@ -86,6 +100,8 @@ public:
                 login_button->Render(),
                 separator(),
                 check_box->Render(),
+                separator(),
+                reg_link->Render()
 
             }) | border | center | vcenter;
         });
