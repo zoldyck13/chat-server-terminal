@@ -1,5 +1,5 @@
 #ifndef __FTUXI_MENU
-#define __FTUXI_EMNU
+#define __FTUXI_MENU
 
 #include <string>
 #include <ftxui/component/component.hpp>
@@ -28,39 +28,45 @@ MenuEntryOption Colored(ftxui::Color c) {
   return option;
 }
 
-
-
 class ServerMenu {
-
-    private:
-
+private:
     Component menu;
     Component layout;
+
+    std::vector<std::string> entries = {
+        "👤 User",
+        "⚙️ Settings",
+        "📁 Files",
+        "🚀 Launch",
+    };
+
+public:
+
     int selected = 0;
 
-    public:
+    MenuOption option;
+      std::function<void(int)> onSelect;
 
-    ServerMenu(){
-        menu = Container::Vertical({
-            MenuEntry("1. Connected", Colored(Color::Cyan)),
-            MenuEntry("2. Settings", Colored(Color::Cyan)),
-            MenuEntry("3. Admins List", Colored(Color::Cyan)),
-        }, &selected);
+    ServerMenu() {
+        option = MenuOption();
+        option.on_enter = [&] {
+            if(onSelect)  onSelect(selected);
+        };
+
+        menu = Menu(&entries, &selected, option);
 
 
-        layout = Renderer(menu, [&]{
+        layout = Renderer(menu, [&] {
             return vbox({
-                hbox(text("selected = "), text(std::to_string(selected))),
+                hbox(text("📊 Main Menu: ") | bold | color(Color::Cyan) | center, text(std::to_string(selected))),
                 separator(),
-                menu->Render() | frame | size(HEIGHT, LESS_THAN, 100),
-            }) | border | center | vcenter;
+                menu->Render() | frame | flex,
+            }) | size(WIDTH, GREATER_THAN, 20) | border | center | vcenter;
         });
     }
 
-    Component RenderMenu(){return layout;}
-
+    Component RenderMenu() { return layout; }
 };
-
 
 
 #endif

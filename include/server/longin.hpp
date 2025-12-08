@@ -15,7 +15,7 @@
 using namespace ftxui;
 
 class Login {
-private:
+protected:
     std::string user_name;
     std::string password;
     std::string login_message;
