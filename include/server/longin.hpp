@@ -100,8 +100,8 @@ public:
             return vbox({
                 text("Admin Login UI"),
                 separator(),
-                hbox(text("Username: "), input_username->Render()),
-                hbox(text("Password: "), input_password->Render()),
+                hbox(text("Username: "), input_username->Render()) | border | flex,
+                hbox(text("Password: "), input_password->Render()) | border | flex,
                 separator(),
                 login_button->Render(),
                 separator(),

@@ -5,6 +5,7 @@
 int main(){
 
     ScreenInteractive screen = ScreenInteractive::Fullscreen();
+    InitializeDb();
 
     int page = 0;
 
@@ -24,6 +25,18 @@ int main(){
     register_page.onBack = [&] {
         page = 0;
         screen.PostEvent(Event::Custom);
+    };
+
+    register_page.onReg = [&] {
+       
+       std::string user, pass;
+        user = register_page.getUser();
+        pass = register_page.getPass();
+
+       if(insertUser(db, user, pass)) page = 0;
+
+       screen.PostEvent(Event::Custom);
+
     };
 
     screen.Loop(container);

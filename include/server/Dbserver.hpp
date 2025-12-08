@@ -28,7 +28,6 @@ void InitializeDb(){
 
     std::cout << "Database and users table created successfully.\n";
 
-    sqlite3_close(db);
 }
 
 
