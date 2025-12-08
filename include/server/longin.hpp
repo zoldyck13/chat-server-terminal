@@ -18,6 +18,7 @@ class Login {
 private:
     std::string user_name;
     std::string password;
+    std::string login_message;
 
     Component input_username;
     Component input_password;
@@ -34,6 +35,7 @@ public:
 
 
     std::function<void()> onRegister;
+    std::function<void()> onLog;
 
     //Create Style
     ButtonOption Style(){
@@ -60,10 +62,12 @@ public:
 
         // Create Button once
         login_button = Button("Login", [&] {
-            if (checkLogin(db, user_name, password))
-                std::cout << "Enter successfully\n";
-            else 
-                std::cout << "failed\n";
+            if (checkLogin(db, user_name, password)){
+                login_message = "";
+                if(onLog) onLog();
+
+            }else 
+                login_message = "Password or User incorrect!";
         }, Style());
 
         // Create hyperlink 
@@ -104,6 +108,8 @@ public:
                 hbox(text("Password: "), input_password->Render()) | border | flex,
                 separator(),
                 login_button->Render(),
+                separator(),
+                text(login_message) | color(Color::Red) ,
                 separator(),
                 check_box->Render(),
                 separator(),

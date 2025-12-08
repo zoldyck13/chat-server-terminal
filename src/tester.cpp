@@ -1,6 +1,8 @@
 #include <iostream>
 #include "../include/server/longin.hpp"
 #include "../include/server/Register.hpp"
+#include "../include/server/Menu.hpp"
+
 
 int main(){
 
@@ -11,14 +13,22 @@ int main(){
 
     Login login_page;
     Register register_page;
+    ServerMenu menu_page;
 
     Component container = Container::Tab({
         login_page.RenderLogin(),
-        register_page.RenderRegister()
+        register_page.RenderRegister(),
+        menu_page.RenderMenu()
+
     }, &page);
 
     login_page.onRegister = [&] {
         page = 1;
+        screen.PostEvent(Event::Custom);
+    };
+
+    login_page.onLog = [&] {
+        page = 2;
         screen.PostEvent(Event::Custom);
     };
 
@@ -38,6 +48,7 @@ int main(){
        screen.PostEvent(Event::Custom);
 
     };
+
 
     screen.Loop(container);
     return 0;
