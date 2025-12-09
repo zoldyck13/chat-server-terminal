@@ -38,6 +38,7 @@ private:
         "⚙️ Settings",
         "📁 Files",
         "🚀 Launch",
+        "⎋ Logout"
     };
 
 public:

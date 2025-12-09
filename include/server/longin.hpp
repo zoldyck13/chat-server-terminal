@@ -34,6 +34,7 @@ protected:
 public:
 
 
+
     std::function<void()> onRegister;
     std::function<void()> onLog;
 
@@ -120,6 +121,7 @@ public:
     }
 
     
+    std::string getUserName(){return user_name;}
 
     Component RenderLogin() {
         return layout;

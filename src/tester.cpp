@@ -30,6 +30,7 @@ int main(){
     };
 
     login_page.onLog = [&] {
+        user_page.setUserName(login_page.getUserName());
         page = 2;
         screen.PostEvent(Event::Custom);
     };
@@ -53,9 +54,10 @@ int main(){
 
     menu_page.onSelect = [&](int index){
         if(index == 0) page = 3;
-        if(index == 1) page = 4;
-        if(index == 2) page = 5;
-        if(index == 3) page = 6;
+        else if(index == 1) page = 4;
+        else if(index == 2) page = 5;
+        else if(index == 3) page = 6;
+        else if(index == 4) page = 0;
 
         screen.PostEvent(Event::Custom);
     };

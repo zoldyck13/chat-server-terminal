@@ -13,16 +13,19 @@
 
 using namespace ftxui;
 
-class UserInfo : protected Login  {
+class UserInfo : public Login  {
 
     private:
 
         Component layout;
         Component back_button;
+        std::string username;
 
     public:
 
         std::function<void()> onBack;
+
+        void setUserName(const std::string& name){ username = name;}
 
         UserInfo(){
 
@@ -35,12 +38,32 @@ class UserInfo : protected Login  {
             });
 
             layout = Renderer(container, [&] {
-                return vbox ({
-                    text("Name: " + user_name)| border | flex,
-                    separator(),
-                    back_button->Render() | flex | border,
-                }) | border | center;
+                return vbox({
+                    hbox({
+                        text(" Account Info") | bold | center | flex,
+                    }),
 
+                    separator(),
+
+                    vbox({
+                        text("Name: " + username),
+                        text("Role: Admin"),
+                        text("Status: Online"),
+
+                        vbox({
+                            text("Connection Info") | bold,
+                            separator(),
+                            text("IP: 192.168.0.3"),
+                            text("Port: 5500"),
+                            text("Session: Active"),
+                        }) | border,
+                    }) | border, 
+                        separator(),
+                        hbox({
+                            back_button->Render() | border,
+                            text("")
+                        })
+                }) | center;
             });
         }
 
