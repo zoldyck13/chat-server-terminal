@@ -8,8 +8,10 @@
 #include <ftxui/component/screen_interactive.hpp>
 #include <ftxui/dom/elements.hpp>
 #include <ftxui/screen/color.hpp>
+#include <vector>
 #include "longin.hpp"
-
+#include "utility.hpp"
+#include "../Server.hpp"
 
 using namespace ftxui;
 
@@ -20,6 +22,9 @@ class UserInfo : public Login  {
         Component layout;
         Component back_button;
         std::string username;
+        std::string ip_dsiplay;
+
+        std::vector<NetworkInterface> interface;
 
     public:
 
@@ -37,6 +42,14 @@ class UserInfo : public Login  {
                 back_button
             });
 
+            ip_dsiplay = "Unkown";
+            interface = GetLocalIPs();
+
+            if(!interface.empty()) ip_dsiplay = interface[0].ip;
+
+
+
+
             layout = Renderer(container, [&] {
                 return vbox({
                     hbox({
@@ -53,16 +66,13 @@ class UserInfo : public Login  {
                         vbox({
                             text("Connection Info") | bold,
                             separator(),
-                            text("IP: 192.168.0.3"),
-                            text("Port: 5500"),
-                            text("Session: Active"),
+                            text("IP: " + ip_dsiplay ),
+                            text("Port: " + std::to_string(Server::getInstace().getPort())),
+                            hbox(text("Session: "), text(Server::getInstace().isRunning() ? "Active" : "Non-Active")),
                         }) | border | center | flex,
                     }) | border | center | flex, 
                         separator(),
-                        hbox({
-                            back_button->Render() | border,
-                            text("")
-                        }) | center | flex,
+                        back_button->Render(),
                 }) | center | flex;
             });
         }

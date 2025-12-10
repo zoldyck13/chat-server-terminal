@@ -6,7 +6,7 @@
 #include "../include/Server.hpp"
 #include "../include/server/Launch.hpp"
 
-
+ 
 int main(){ 
 
     ScreenInteractive screen = ScreenInteractive::Fullscreen();
@@ -30,6 +30,7 @@ int main(){
         launch_page.RenderLaunch(),
         settings_page.RenderIpSettings(),
         settings_page.RenderPortSettings(),
+        settings_page.RenderTimeoutSettings(),
 
     }, &page);
 
@@ -80,6 +81,7 @@ int main(){
     settings_page.onSelectNetwork = [&](int index){
         if(index == 0) page = 6;
         else if(index == 1) page = 7;
+        else if(index == 3) page = 8; 
 
         screen.PostEvent(Event::Custom);
     };

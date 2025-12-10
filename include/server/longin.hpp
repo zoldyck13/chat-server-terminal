@@ -12,6 +12,7 @@
 #include <ftxui/util/ref.hpp>
 #include "Dbserver.hpp"
 
+
 using namespace ftxui;
 
 class Login {
@@ -30,7 +31,8 @@ protected:
     InputOption password_option;
     bool show_password = false;
 
-
+    friend class UserInfo;
+    
 public:
 
 

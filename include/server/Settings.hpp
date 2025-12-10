@@ -37,6 +37,15 @@ class Settingsinfo {
         MenuOption option_account;
         MenuOption option_network;
 
+        int connection_timeout = 1000;       // default 1 second
+        std::string timeout_input;
+        std::string timeout_msg;
+
+        Component timeout_edit;
+        Component apply_timeout_btn;
+        Component layout_timeout;
+
+
         std::vector<std::string> account_settings_entries = {
             "Change username",
             "Change password",
@@ -202,11 +211,79 @@ class Settingsinfo {
                     text("Recommended range: 1024 – 65535") | dim,
                 }) | border | center | vcenter;
             });
+
+
+            // ================== TIMEOUT SETTINGS PAGE ==================
+            timeout_input = std::to_string(connection_timeout);
+
+            timeout_edit = Input(&timeout_input, "Timeout (ms)");
+
+            apply_timeout_btn = Button("Apply Timeout", [this] {
+                int new_timeout = 0;
+
+                try {
+                    new_timeout = std::stoi(timeout_input);
+                } catch (...) {
+                    timeout_msg = "Timeout must be a number!";
+                    return;
+                }
+
+                if (new_timeout < 100 || new_timeout > 10000) {
+                    timeout_msg = "Timeout must be between 100 and 10000 ms.";
+                    return;
+                }
+
+                connection_timeout = new_timeout;
+                timeout_msg = "Timeout updated successfully.";
+
+                // You can save this to a future config system
+                // Or apply to client later
+            });
+
+
+            auto container_timeout = Container::Vertical({
+                timeout_edit,
+                apply_timeout_btn,
+                back_button_settings,
+            });
+
+            layout_timeout = Renderer(container_timeout, [this] {
+                return vbox({
+                    text("Connection Timeout Settings") | bold,
+                    separator(),
+
+                    hbox({
+                        text("Current Timeout: ") | bold,
+                        text(std::to_string(connection_timeout) + " ms")
+                    }),
+
+                    hbox({
+                        text("New Timeout: ") | bold,
+                        timeout_edit->Render()
+                    }),
+
+                    separator(),
+
+                    hbox({
+                        apply_timeout_btn->Render(),
+                        text("   "),
+                        back_button_settings->Render()
+                    }),
+
+                    separator(),
+                    text(timeout_msg) | color(Color::Red),
+
+                    separator(),
+                    text("Recommended: 300–1000 ms for chat apps") | dim
+
+                }) | border | center | vcenter;
+            });
         }
 
         Component RenderSettings()     { return layout; }
         Component RenderIpSettings()   { return layout_ip; }
         Component RenderPortSettings() { return layout_port; }
+        Component RenderTimeoutSettings() {return layout_timeout;}
 };
 
 

@@ -1,3 +1,4 @@
+#pragma once
 #include <ifaddrs.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -12,7 +13,7 @@ struct NetworkInterface {
     std::string ip;
 };
 
-std::vector<NetworkInterface> GetLocalIPs() {
+inline std::vector<NetworkInterface> GetLocalIPs() {
     std::vector<NetworkInterface> result;
 
     struct ifaddrs* interfaces = nullptr;
@@ -43,7 +44,7 @@ std::vector<NetworkInterface> GetLocalIPs() {
     return result;
 }
 
-bool IsPortInUse(int port) {
+inline bool IsPortInUse(int port) {
     int sock = socket(AF_INET, SOCK_STREAM, 0);
     
     sockaddr_in addr{};
@@ -57,6 +58,6 @@ bool IsPortInUse(int port) {
     return result < 0;  // if bind fails → port is in use
 }
 
-bool IsValidPort(int port) {
+inline bool IsValidPort(int port) {
     return port >= 1024 && port <= 65535;
 }
