@@ -59,8 +59,7 @@ int main(){
         if(index == 0) page = 3;
         else if(index == 1) page = 4;
         else if(index == 2) page = 5;
-        else if(index == 3) page = 6;
-        else if(index == 4) page = 0;
+        else if(index == 3) page = 0;
 
         screen.PostEvent(Event::Custom);
     };

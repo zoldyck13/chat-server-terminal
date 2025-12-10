@@ -22,7 +22,6 @@ private:
     std::vector<std::string> entries = {
         "👤 User",
         "⚙️ Settings",
-        "📁 Files",
         "🚀 Launch",
         "⎋ Logout"
     };
