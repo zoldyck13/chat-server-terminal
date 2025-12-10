@@ -7,7 +7,7 @@
 #include "../include/server/Launch.hpp"
 
 
-int main(){
+int main(){ 
 
     ScreenInteractive screen = ScreenInteractive::Fullscreen();
     InitializeDb();
@@ -28,6 +28,8 @@ int main(){
         user_page.UserRender(),
         settings_page.RenderSettings(),
         launch_page.RenderLaunch(),
+        settings_page.RenderIpSettings(),
+        settings_page.RenderPortSettings(),
 
     }, &page);
 
@@ -59,6 +61,7 @@ int main(){
 
     }; 
 
+    //On select item from menu.
     menu_page.onSelect = [&](int index){
         if(index == 0) page = 3;
         else if(index == 1) page = 4;
@@ -73,13 +76,19 @@ int main(){
         screen.PostEvent(Event::Custom);
     };
 
+    //On select item from settings
+    settings_page.onSelectNetwork = [&](int index){
+        if(index == 0) page = 6;
+        else if(index == 1) page = 7;
 
+        screen.PostEvent(Event::Custom);
+    };
 
     user_page.onBack = [&]{
         page = 2;
 
         screen.PostEvent(Event::Custom);
-    };
+    }; 
 
     settings_page.onBack = [&] {
         page = 2;
@@ -98,11 +107,16 @@ int main(){
     };
 
     launch_page.onRestart = [&] {
-    Server::getInstace().restart();
+        Server::getInstace().restart();
     };
 
     launch_page.onClearLogs = [&] {
         Server::getInstace().clearLogs();
+        screen.PostEvent(Event::Custom);
+    };
+
+    settings_page.onBack2 = [&]{
+        page = 4;
         screen.PostEvent(Event::Custom);
     };
 

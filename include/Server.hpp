@@ -7,6 +7,7 @@
 #include <chrono>
 #include <thread>
 
+
 class HandelClient; // forward declaration
 
 class Server {
@@ -18,6 +19,7 @@ private:
     int serverSocket;
     std::string ip;
     int port;
+
 
     bool running = false;
 
@@ -54,6 +56,9 @@ public:
     uint64_t getBytesReceived() const;
     uint64_t getBytesSent() const;
     uint64_t getMessagesReceived() const;
+
+    void setPort(int p){ port = p;}
+
 };
 
 #endif

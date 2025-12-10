@@ -56,14 +56,14 @@ class UserInfo : public Login  {
                             text("IP: 192.168.0.3"),
                             text("Port: 5500"),
                             text("Session: Active"),
-                        }) | border,
-                    }) | border, 
+                        }) | border | center | flex,
+                    }) | border | center | flex, 
                         separator(),
                         hbox({
                             back_button->Render() | border,
                             text("")
-                        })
-                }) | center;
+                        }) | center | flex,
+                }) | center | flex;
             });
         }
 
