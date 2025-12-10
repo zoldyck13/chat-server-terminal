@@ -3,6 +3,7 @@
 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <thread>
 #include <unistd.h>
 
 
@@ -30,13 +31,21 @@ void Server::start() {
 
     hc = std::make_unique<HandelClient>(serverSocket);
 
-    hc->run();
+    server_thread = std::thread([this]{
+        hc->run();
+    });
+
+    server_thread.detach();
 }
 
 void Server::stop() {
+    if (!running) return;
+
     running = false;
+
     if (hc)
         hc->stop();
+
     close(serverSocket);
 }
 
@@ -59,4 +68,26 @@ std::string Server::getUptime() const {
     auto seconds = std::chrono::duration_cast<std::chrono::seconds>(now - start_time).count();
 
     return std::to_string(seconds) + "s";
+}
+
+
+void Server::restart() {
+    stop();
+    start();
+}
+
+void Server::clearLogs() {
+    if (hc) hc->clearLogs();
+}
+
+uint64_t Server::getBytesReceived() const {
+    return hc ? hc->getBytesReceived() : 0;
+}
+
+uint64_t Server::getBytesSent() const {
+    return hc ? hc->getBytesSent() : 0;
+}
+
+uint64_t Server::getMessagesReceived() const {
+    return hc ? hc->getMessagesReceived() : 0;
 }

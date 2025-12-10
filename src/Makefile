@@ -9,7 +9,7 @@ FTXUI_FLAGS = $(shell pkg-config --cflags --libs ftxui)
 
 LIBS = -lsqlite3
 
-SRC = tester.cpp
+SRC = tester.cpp server_h.cpp
 OUT = output.out
 
 all: $(OUT)

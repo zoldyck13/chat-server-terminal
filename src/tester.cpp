@@ -3,6 +3,8 @@
 #include "../include/server/Menu.hpp"
 #include "../include/server/User.hpp"
 #include "../include/server/Settings.hpp"
+#include "../include/Server.hpp"
+#include "../include/server/Launch.hpp"
 
 
 int main(){
@@ -17,13 +19,15 @@ int main(){
     ServerMenu menu_page;
     UserInfo user_page;
     Settingsinfo settings_page;
+    LaunchServer launch_page;
 
     Component container = Container::Tab({
         login_page.RenderLogin(),
         register_page.RenderRegister(),
         menu_page.RenderMenu(),
         user_page.UserRender(),
-        settings_page.RenderSettings()
+        settings_page.RenderSettings(),
+        launch_page.RenderLaunch(),
 
     }, &page);
 
@@ -58,7 +62,12 @@ int main(){
     menu_page.onSelect = [&](int index){
         if(index == 0) page = 3;
         else if(index == 1) page = 4;
-        else if(index == 2) page = 5;
+        else if(index == 2){
+             page = 5;
+
+             Server::getInstace().start();
+            
+            }
         else if(index == 3) page = 0;
 
         screen.PostEvent(Event::Custom);
@@ -78,8 +87,37 @@ int main(){
         screen.PostEvent(Event::Custom);
     };
 
+    launch_page.onBack = [&] {
+        page = 2;
 
+        screen.PostEvent(Event::Custom);
+    };
+
+    launch_page.onStop = [&] {
+        Server::getInstace().stop();
+    };
+
+    launch_page.onRestart = [&] {
+    Server::getInstace().restart();
+    };
+
+    launch_page.onClearLogs = [&] {
+        Server::getInstace().clearLogs();
+        screen.PostEvent(Event::Custom);
+    };
+
+
+
+    std::thread refresher([&] {
+        while (true) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+            screen.PostEvent(ftxui::Event::Custom);
+        }
+    });
+    refresher.detach();
 
     screen.Loop(container);
+
+
     return 0;
 }

@@ -5,11 +5,16 @@
 #include <vector>
 #include <memory>
 #include <chrono>
+#include <thread>
 
 class HandelClient; // forward declaration
 
 class Server {
+
 private:
+    Server(int port);
+    ~Server();  
+
     int serverSocket;
     std::string ip;
     int port;
@@ -20,10 +25,18 @@ private:
 
     std::chrono::steady_clock::time_point start_time;
 
-public:
-    Server(int port);
-    ~Server();  
+    std::thread server_thread;
 
+public:
+
+    static Server& getInstace(){
+        static Server instace(8080);
+        return instace;
+    }
+
+    Server(const Server&) = delete;
+
+    Server& operator = (const Server&) = delete;
 
     void start();
     void stop();
@@ -34,6 +47,13 @@ public:
     int getClientCount() const;
     std::vector<std::string> getLogs() const;
     std::string getUptime() const;
+
+    void restart();               
+    void clearLogs();             
+
+    uint64_t getBytesReceived() const;
+    uint64_t getBytesSent() const;
+    uint64_t getMessagesReceived() const;
 };
 
 #endif
