@@ -31,6 +31,7 @@ int main(){
         settings_page.RenderIpSettings(),
         settings_page.RenderPortSettings(),
         settings_page.RenderTimeoutSettings(),
+        settings_page.RenderChangeName(),
 
     }, &page);
 
@@ -86,6 +87,10 @@ int main(){
         screen.PostEvent(Event::Custom);
     };
 
+    settings_page.onSelectAccount = [&](int index) {
+        if(index == 0) page = 9; 
+    };
+
     user_page.onBack = [&]{
         page = 2;
 
@@ -122,12 +127,24 @@ int main(){
         screen.PostEvent(Event::Custom);
     };
 
+    settings_page.onApplayChangeUsername = [&]{
+        page = 9;
+        std::string old_user = user_page.getUserName();
+    
+        settings_page.getOldUser(old_user);
+
+        user_page.setUserName(settings_page.getNewUser());
+
+        screen.PostEvent(Event::Custom);
+
+    };
+
 
 
     std::thread refresher([&] {
         while (true) {
             std::this_thread::sleep_for(std::chrono::seconds(1));
-            screen.PostEvent(ftxui::Event::Custom);
+            screen.PostEvent(Event::Custom);
         }
     });
     refresher.detach();

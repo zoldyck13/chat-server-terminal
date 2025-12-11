@@ -9,17 +9,19 @@
 #include <ftxui/dom/node.hpp>
 #include <ftxui/screen/color.hpp>
 #include <ftxui/dom/elements.hpp>
+#include <functional>
 #include <string>
+#include "ftxui/dom/elements.hpp"
 #include "utility.hpp"
 #include "../Server.hpp"
-
+#include "Dbserver.hpp"
 
 using namespace ftxui;
 
 class Settingsinfo {
 
     private:
-        Component layout, layout_ip, layout_port;
+        Component layout, layout_ip, layout_port, layout_changeusername;
         Component back_button_menu, back_button_settings;
         Component account_settings_menu;
         Component network_settings_menu;
@@ -45,6 +47,12 @@ class Settingsinfo {
         Component apply_timeout_btn;
         Component layout_timeout;
 
+        Component apply_changeusername_btn;
+        Component username_edit;
+        std::string old_username;
+        std::string new_username;
+        std::string changeusername_msg;
+
 
         std::vector<std::string> account_settings_entries = {
             "Change username",
@@ -64,6 +72,7 @@ class Settingsinfo {
         std::function<void()> onBack, onBack2;
         std::function<void(int)> onSelectAccount;
         std::function<void(int)> onSelectNetwork;
+        std::function<void()> onApplayChangeUsername;
 
         Settingsinfo() {
             // ================== MAIN SETTINGS MENU ==================
@@ -278,12 +287,58 @@ class Settingsinfo {
 
                 }) | border | center | vcenter;
             });
+
+
+            // ================== USERNAME SETTINGS PAGE ==================
+
+            username_edit = Input(&new_username, "Enter new username");
+
+            apply_changeusername_btn = Button("Apply", [&]{
+                if(onApplayChangeUsername) onApplayChangeUsername();
+
+                if(checkName(db, new_username)) {
+                    // Username already in database
+                    changeusername_msg = "User already exists, try another one.";
+                } 
+                else {
+                    // Username available → update
+                    if(updateUsername(db, old_username, new_username)) {
+                        changeusername_msg = "Username " + new_username + " has changed successfully.";
+                    }
+                }
+            });
+
+            auto container_username = Container::Vertical({
+                username_edit,
+                apply_changeusername_btn,
+                back_button_settings
+            });
+
+            layout_changeusername = Renderer(container_username, [&]{
+                return vbox({
+                    text("Change Username") | bold | center | flex,
+                    separator(),
+                    username_edit->Render() | border | center | flex,
+
+                    hbox({
+                        apply_changeusername_btn->Render(),
+                        back_button_settings->Render(),
+                    }) | flex,
+
+                    separator(),
+                    text(changeusername_msg) | dim,
+                }) | border;
+            }) | center | vcenter | flex;
+
         }
 
         Component RenderSettings()     { return layout; }
         Component RenderIpSettings()   { return layout_ip; }
         Component RenderPortSettings() { return layout_port; }
         Component RenderTimeoutSettings() {return layout_timeout;}
+        Component RenderChangeName() {return layout_changeusername;}
+        void getOldUser(std::string user){old_username = user; }
+        std::string getNewUser() {return new_username;}
 };
 
 

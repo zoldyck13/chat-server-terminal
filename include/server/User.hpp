@@ -30,8 +30,6 @@ class UserInfo : public Login  {
 
         std::function<void()> onBack;
 
-        void setUserName(const std::string& name){ username = name;}
-
         UserInfo(){
 
             back_button = Button("Back", [&]{
@@ -79,6 +77,9 @@ class UserInfo : public Login  {
 
 
         Component UserRender(){return layout;}
+        void setUserName(const std::string& name){ username = name;}
+        std::string getUserName(){return username;}
+
 
 };
 

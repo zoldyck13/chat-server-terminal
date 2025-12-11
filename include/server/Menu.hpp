@@ -44,7 +44,7 @@ public:
 
         layout = Renderer(menu, [&] {
             return vbox({
-                hbox(text("📊 Main Menu: ") | bold | color(Color::Cyan) | center, text(std::to_string(selected))),
+                hbox(text("📊 Main Menu") | bold | color(Color::Cyan)),
                 separator(),
                 menu->Render() | frame | flex,
             }) | size(WIDTH, GREATER_THAN, 20) | border | center | vcenter;
