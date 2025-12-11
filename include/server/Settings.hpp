@@ -30,7 +30,6 @@ class Settingsinfo {
         // NEW: dedicated port settings components/state
         Component port_edit;
         Component apply_port_btn;
-        Component back_button_port;
 
         std::string port_input;
         std::string dialog_msg;
@@ -89,7 +88,23 @@ class Settingsinfo {
         std::function<void()> onApplayChangeUsername;
         std::function<void()> onApplayChangePass;
 
+        Component back_button_ip;
+        Component back_button_port;
+        Component back_button_timeout;
+        Component back_button_username;
+        Component back_button_pass;
+
+
         Settingsinfo() {
+
+            //Initialize Backbutton var
+            back_button_ip       = Button("Back", [&]{ if(onBack2) onBack2(); });
+            back_button_port     = Button("Back", [&]{ if(onBack2) onBack2(); });
+            back_button_timeout  = Button("Back", [&]{ if(onBack2) onBack2(); });
+            back_button_username = Button("Back", [&]{ if(onBack2) onBack2(); });
+            back_button_pass     = Button("Back", [&]{ if(onBack2) onBack2(); });
+
+
             // ================== MAIN SETTINGS MENU ==================
             option_account = MenuOption();
             option_account.on_enter = [&] {
@@ -135,12 +150,9 @@ class Settingsinfo {
             });
 
             // ================== IP SETTINGS PAGE ==================
-            back_button_settings = Button("Back", [&] {
-                if (onBack2) onBack2();
-            });
 
             auto container2 = Container::Vertical({
-                back_button_settings,
+                back_button_ip,
             });
 
             layout_ip = Renderer(container2, [this] {
@@ -161,7 +173,7 @@ class Settingsinfo {
                     separator(),
                     vbox(ip_elems) | border | color(Color::Cyan),
                     separator(),
-                    hbox(back_button_settings->Render(), text("")),
+                    hbox(back_button_ip->Render()),
                 }) | center | vcenter | border;
             });
 
@@ -201,10 +213,6 @@ class Settingsinfo {
                 } else {
                     dialog_msg = "Port updated.";
                 }
-            });
-
-            back_button_port = Button("Back", [&] {
-                if (onBack2) onBack2();
             });
 
             auto container3 = Container::Vertical({
@@ -268,7 +276,7 @@ class Settingsinfo {
             auto container_timeout = Container::Vertical({
                 timeout_edit,
                 apply_timeout_btn,
-                back_button_settings,
+                back_button_timeout,
             });
 
             layout_timeout = Renderer(container_timeout, [this] {
@@ -291,7 +299,7 @@ class Settingsinfo {
                     hbox({
                         apply_timeout_btn->Render(),
                         text("   "),
-                        back_button_settings->Render()
+                        back_button_timeout->Render()
                     }),
 
                     separator(),
@@ -326,7 +334,7 @@ class Settingsinfo {
             auto container_username = Container::Vertical({
                 username_edit,
                 apply_changeusername_btn,
-                back_button_settings
+                back_button_username
             });
 
             layout_changeusername = Renderer(container_username, [&]{
@@ -337,7 +345,7 @@ class Settingsinfo {
 
                     hbox({
                         apply_changeusername_btn->Render(),
-                        back_button_settings->Render(),
+                        back_button_username->Render(),
                     }) | flex,
 
                     separator(),
@@ -392,7 +400,7 @@ class Settingsinfo {
             password_edit,
             passwordconfi_edit,
             apply_changepass_btn,
-            back_button_settings,
+            back_button_pass,
             show_password_checkbox
         });
 
@@ -411,7 +419,7 @@ class Settingsinfo {
 
                     separator(),
 
-                    hbox(back_button_settings->Render(),apply_changepass_btn->Render()),
+                    hbox(back_button_pass->Render(),apply_changepass_btn->Render()),
                     separator(),
                     text(changepass_msg) | dim | color(col == 2 ? Color::Green : Color::Black),
 

@@ -39,19 +39,6 @@ public:
     std::function<void()> onBack;
     std::function<void()> onReg;
 
-    //Create Style
-    ButtonOption Style(){
-        auto option = ButtonOption::Animated();
-        option.transform = [] (const EntryState& s){
-            auto element = text(s.label);
-            if(s.focused){
-                element |= bold;
-            }
-            return element | center | borderEmpty | flex;
-        };
-        return option;
-    }
-
     Register() {
 
         // Create Inputs
@@ -75,7 +62,7 @@ public:
                 unmatch_message = "";
                 if(onReg) onReg();
             } else unmatch_message = "Unmatch Password";
-        }, Style());
+        });
 
         // Create container once
         auto container = Container::Vertical({
@@ -83,8 +70,9 @@ public:
             input_email,
             input_password,
             input_confirm_password,
+            check_box,
+            reg_button,
             sg_link,
-            reg_button
         });
 
         layout = Renderer(container, [&] {
@@ -97,6 +85,7 @@ public:
                     hbox(text("* ") | color(Color::Red),text("Password: "), input_password->Render()) | border | flex,
                     hbox(text("* ") | color(Color::Red), text("Confirm password"), input_confirm_password->Render()) | border | flex,
                     separator(),
+                    hbox( check_box->Render() | dim),
                     reg_button->Render(),
                     separator(),
                     sg_link->Render(),

@@ -49,7 +49,7 @@ int main(){
 
     register_page.onBack = [&] {
         page = 0;
-        screen.PostEvent(Event::Custom);
+        screen.PostEvent(Event::Custom); 
     };
 
     register_page.onReg = [&] {
@@ -90,11 +90,11 @@ int main(){
 
     settings_page.onSelectAccount = [&](int index) {
         if(index == 0) page = 9; 
-        if(index == 1) page = 10;
+        if(index == 1) page = 10; 
 
         screen.PostEvent(Event::Custom);
     };
-
+  
     user_page.onBack = [&]{
         page = 2;
 

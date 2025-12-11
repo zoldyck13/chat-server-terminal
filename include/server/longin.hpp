@@ -40,19 +40,6 @@ public:
     std::function<void()> onRegister;
     std::function<void()> onLog;
 
-    //Create Style
-    ButtonOption Style(){
-        auto option = ButtonOption::Animated();
-        option.transform = [] (const EntryState& s){
-            auto element = text(s.label);
-            if(s.focused){
-                element |= bold;
-            }
-            return element | center | borderEmpty | flex;
-        };
-        return option;
-    }
-
     Login() {
 
         // Create Inputs
@@ -71,7 +58,7 @@ public:
 
             }else 
                 login_message = "Password or User incorrect!";
-        }, Style());
+        });
 
         // Create hyperlink 
         ButtonOption link_style;
