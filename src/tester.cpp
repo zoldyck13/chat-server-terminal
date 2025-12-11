@@ -32,6 +32,7 @@ int main(){
         settings_page.RenderPortSettings(),
         settings_page.RenderTimeoutSettings(),
         settings_page.RenderChangeName(),
+        settings_page.RenderChangePass(),
 
     }, &page);
 
@@ -89,6 +90,9 @@ int main(){
 
     settings_page.onSelectAccount = [&](int index) {
         if(index == 0) page = 9; 
+        if(index == 1) page = 10;
+
+        screen.PostEvent(Event::Custom);
     };
 
     user_page.onBack = [&]{
@@ -138,6 +142,14 @@ int main(){
         screen.PostEvent(Event::Custom);
 
     };
+
+    settings_page.onApplayChangePass = [&] {
+
+        std::string old_user = user_page.getUserName();
+
+        settings_page.getOldUser(old_user);
+
+    }; 
 
 
 

@@ -152,4 +152,51 @@ inline bool updateUsername(sqlite3* db, const std::string& olduser, std::string&
     return true;
 }
 
+
+inline bool updatePassword(sqlite3* db, const std::string& username, const std::string& pass){
+
+    const char* sql = "SELECT id FROM users WHERE username=?;";
+
+    sqlite3_stmt* stmt;
+    int user_id = -1;
+
+    if(sqlite3_prepare_v2(db, sql, -1, &stmt, nullptr) != SQLITE_OK ){
+
+        std::cerr << "Failed to prepaer statement: " << sqlite3_errmsg(db) << std::endl;
+        return false;
+    }
+
+    sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_TRANSIENT);
+
+    if(sqlite3_step(stmt) == SQLITE_ROW){
+        user_id = sqlite3_column_int(stmt, 0);
+    }
+
+    sqlite3_finalize(stmt);
+
+    const char* sql2 = "UPDATE users SET password=? WHERE id=?;";
+
+    sqlite3_stmt* stmt2;
+
+    if(sqlite3_prepare_v2(db, sql2, -1, &stmt2, nullptr) != SQLITE_OK){
+
+        std::cerr << "Failed to prepaer statement: " << sqlite3_errmsg(db) << std::endl;
+        return false;
+    }
+
+    sqlite3_bind_text(stmt2, 1, pass.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt2, 2, user_id);
+
+    if(sqlite3_step(stmt2) != SQLITE_DONE){
+        std::cerr << "Failed to Update username: " << sqlite3_errmsg(db) << std::endl;
+        return false;
+    }
+
+    sqlite3_finalize(stmt2);
+    return true;
+    
+
+}
+
+
 #endif

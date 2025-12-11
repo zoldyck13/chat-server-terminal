@@ -16,12 +16,13 @@
 #include "../Server.hpp"
 #include "Dbserver.hpp"
 
+
 using namespace ftxui;
 
 class Settingsinfo {
 
     private:
-        Component layout, layout_ip, layout_port, layout_changeusername;
+        Component layout, layout_ip, layout_port, layout_changeusername, layout_changepass;
         Component back_button_menu, back_button_settings;
         Component account_settings_menu;
         Component network_settings_menu;
@@ -53,6 +54,19 @@ class Settingsinfo {
         std::string new_username;
         std::string changeusername_msg;
 
+        Component apply_changepass_btn;
+        Component password_edit;
+        Component oldpassword_edit;
+        Component passwordconfi_edit;
+        Component show_password_checkbox;
+        bool show_password = false;
+        std::string changepass_msg;
+        std::string old_password;
+        std::string confirm_password;
+        std::string new_password;
+        std::string confirm_message;
+
+
 
         std::vector<std::string> account_settings_entries = {
             "Change username",
@@ -73,6 +87,7 @@ class Settingsinfo {
         std::function<void(int)> onSelectAccount;
         std::function<void(int)> onSelectNetwork;
         std::function<void()> onApplayChangeUsername;
+        std::function<void()> onApplayChangePass;
 
         Settingsinfo() {
             // ================== MAIN SETTINGS MENU ==================
@@ -283,7 +298,7 @@ class Settingsinfo {
                     text(timeout_msg) | color(Color::Red),
 
                     separator(),
-                    text("Recommended: 300–1000 ms for chat apps") | dim
+                    text("Recommended: 300–1000 ms") | dim
 
                 }) | border | center | vcenter;
             });
@@ -330,6 +345,84 @@ class Settingsinfo {
                 }) | border;
             }) | center | vcenter | flex;
 
+
+
+            // ================== PASSWORD SETTINGS PAGE ==================
+
+            int col = Color::Black;
+            show_password_checkbox = Checkbox("show password ", &show_password);
+
+            InputOption pass_opt;
+            pass_opt.password = show_password;      
+            pass_opt.on_change = [&] {
+                if (confirm_password.empty()) {
+                    confirm_message = "";
+                    return;
+                }
+
+                if (new_password == confirm_password)
+                    confirm_message = "✓ Passwords match";
+                else
+                    confirm_message = "✗ Passwords do NOT match";
+            };
+
+            oldpassword_edit = Input(&old_password, "Enter old password", pass_opt);
+            password_edit = Input(&new_password, "Enter new password", pass_opt);
+            passwordconfi_edit = Input(&confirm_password, "Confirm password", pass_opt);
+
+            apply_changepass_btn = Button("Apply", [&]{
+                if(onApplayChangePass) onApplayChangePass();
+
+                if(!checkLogin(db, old_username, old_password)){
+                    changepass_msg = "Old password is incorrect!";
+                }
+                else{
+                   if(updatePassword(db, old_username, new_password)) {
+                        changepass_msg = "Password has been changed successfully.";
+                        col = Color::Green;
+                    } else {
+                        changepass_msg = "Failed to change password.";
+                        col = Color::Black;
+                    }
+                }
+            });
+
+            auto container_pass = Container::Vertical({
+            oldpassword_edit,
+            password_edit,
+            passwordconfi_edit,
+            apply_changepass_btn,
+            back_button_settings,
+            show_password_checkbox
+        });
+
+            layout_changepass = Renderer(container_pass, [&] {
+                return vbox({
+                    text("Old Password:") | bold,
+                    oldpassword_edit->Render(),
+
+                    text("New Password:") | bold,
+                    password_edit->Render(),
+
+                    text("Confirm:") | bold,
+                    passwordconfi_edit->Render(),
+
+                    text(confirm_message) | color(confirm_message.find("✓") ? Color::Red : Color::Green),
+
+                    separator(),
+
+                    hbox(back_button_settings->Render(),apply_changepass_btn->Render()),
+                    separator(),
+                    text(changepass_msg) | dim | color(col == 2 ? Color::Green : Color::Black),
+
+                    separator(),
+
+                    show_password_checkbox->Render(),
+
+                });
+        }) | color(Color::Cyan);
+
+
         }
 
         Component RenderSettings()     { return layout; }
@@ -337,6 +430,7 @@ class Settingsinfo {
         Component RenderPortSettings() { return layout_port; }
         Component RenderTimeoutSettings() {return layout_timeout;}
         Component RenderChangeName() {return layout_changeusername;}
+        Component RenderChangePass() {return layout_changepass;}
         void getOldUser(std::string user){old_username = user; }
         std::string getNewUser() {return new_username;}
 };
