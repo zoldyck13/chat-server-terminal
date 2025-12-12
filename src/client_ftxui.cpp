@@ -1,5 +1,6 @@
 #include "../include/client/Login.hpp"
 #include <ftxui/component/component.hpp>
+#include "../include/client/Register.hpp"
 #include <thread>
 
 
@@ -11,15 +12,29 @@ int main() {
     int page = 0;
 
     Login login_page;
+    Register register_page;
 
     Component container = Container::Tab({
         login_page.RenderLogin(),
+        register_page.RenderRegister(),
 
     }, &page);
 
 
     login_page.onLog = [&]{
-        page =1;
+        page =0;
+
+        screen.PostEvent(Event::Custom);
+    };
+
+    login_page.onRegister = [&] {
+        page = 1;
+
+        screen.PostEvent(Event::Custom);
+    };
+
+    register_page.onBack = [&] {
+        page = 0;
 
         screen.PostEvent(Event::Custom);
     };

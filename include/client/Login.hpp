@@ -42,12 +42,6 @@ class Login {
             password_edit = Input(&password, "Enter Password", password_option);
 
 
-            InputOption pass_opt;
-            pass_opt.password = show_password;      
-            pass_opt.on_change = [&] {
-                    return;
-                };
-
             login_button = Button("Login", [&]{
 
                 if(!checkLogin(db, username, password)){
