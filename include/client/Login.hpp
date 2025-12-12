@@ -10,7 +10,8 @@
 #include <ftxui/screen/color.hpp>
 #include <functional>
 #include <string>
-#include "Dbclient.hpp"
+#include "ClientSocket.hpp"
+
 
 using namespace ftxui;
 
@@ -44,15 +45,15 @@ class Login {
 
             login_button = Button("Login", [&]{
 
-                if(!checkLogin(db, username, password)){
-                    login_msg = "Username or Password incorrect!";
+                auto& client = ClientSocket::getInstace();
 
-                } else {
-
-                    if(onLog) onLog();
-                    login_msg = "";
-
+                if (!client.login(username, password)) {
+                    login_msg = "Login failed (server rejected)";
+                    return;
                 }
+
+                login_msg = "";
+                if (onLog) onLog();
             });
 
             ButtonOption link_style;

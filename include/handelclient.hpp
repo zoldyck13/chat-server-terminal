@@ -14,11 +14,25 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
+#include "../include/server/Dbserver.hpp"
+#include <sstream>
+
+
+
+
+
+
 class HandelClient {
 private:
+
+    std::atomic<uint64_t> sid_generator{1};
+
     struct ClientInfo {
-        int fd;
-        std::string ip;
+    int fd;
+    uint64_t sid;        
+    int user_id;     
+    std::string username;
+    bool authenticated;
     };
 
     int serverSocket;
@@ -85,6 +99,19 @@ public:
         logs.clear();
     }
 
+
+    //============================
+    //FIND CLIENT
+    //============================
+
+    ClientInfo* find_client_by_fd(int fd) {
+        for (auto& c : clients)
+            if (c.fd == fd)
+                return &c;
+        return nullptr;
+    }
+
+
     // =============================
     // Control
     // =============================
@@ -115,9 +142,17 @@ public:
                     char ip_buf[INET_ADDRSTRLEN];
                     inet_ntop(AF_INET, &(client_addr.sin_addr), ip_buf, INET_ADDRSTRLEN);
 
+
+                    ClientInfo client;
+                    client.fd = clientSocket;
+                    client.sid = sid_generator++;
+                    client.user_id = -1;
+                    client.username = "";
+                    client.authenticated = false;
+
                     {
                         std::lock_guard<std::mutex> lock(clients_mutex);
-                        clients.push_back({ clientSocket, ip_buf });
+                        clients.push_back(client);
                     }
 
                     addLog(std::string("New client connected: fd=") + std::to_string(clientSocket) +
@@ -129,6 +164,7 @@ public:
                 }
             }
 
+            
             // ============================
             // HANDLE EXISTING CLIENTS
             // ============================
@@ -155,7 +191,40 @@ public:
                         bytes_received += bytes;
                         messages_received++;
 
-                        addLog("Client " + std::to_string(sock) + " sent: " + buffer);
+                        ClientInfo* c = find_client_by_fd(sock);
+                        if (!c) continue;
+
+                        std::string msg(buffer);
+
+                        // ================= LOGIN =================
+                        if (!c->authenticated) {
+
+                            if (msg.find("LOGIN ") == 0) {
+
+                                std::istringstream iss(msg);
+                                std::string cmd, username, password;
+                                iss >> cmd >> username >> password;
+
+                                if (checkLogin(db, username, password)) {
+
+                                    c->username = username;       // ⭐ الاسم يُخزَّن هنا
+                                    c->authenticated = true;
+
+                                    addLog("SID " + std::to_string(c->sid) +
+                                        " logged in as " + username);
+
+                                    send(sock, "LOGIN OK\n", 9, 0);
+
+                                } else {
+                                    send(sock, "LOGIN FAILED\n", 13, 0);
+                                }
+
+                            } else {
+                                send(sock, "Please login first\n", 19, 0);
+                            }
+
+                            continue;
+                        }
 
                         int sent = send(sock, buffer, bytes, 0);
                         if (sent > 0)
