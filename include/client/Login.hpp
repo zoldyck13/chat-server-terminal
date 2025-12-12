@@ -137,6 +137,7 @@ class Login {
         }
 
         Component RenderLogin() { return layout;};
+        std::string getUser(){return username;}
 
 };
 

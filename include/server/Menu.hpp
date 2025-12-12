@@ -18,6 +18,7 @@ class ServerMenu {
 private:
     Component menu;
     Component layout;
+    
 
     std::vector<std::string> entries = {
         "👤 User",
