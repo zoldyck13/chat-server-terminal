@@ -1,0 +1,63 @@
+#include "../include/client/ClientSocket.hpp"
+
+#include <cstring>
+#include <iostream>
+#include <netinet/in.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+
+ClientSocket::ClientSocket(int port)
+    : port(port) {
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0) {
+        perror("socket");
+    }
+}
+
+bool ClientSocket::connectToServer() {
+    sockaddr_in serverAddress{};
+    serverAddress.sin_family = AF_INET;
+    serverAddress.sin_port = htons(port);
+    serverAddress.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+    if (connect(sockfd, (sockaddr*)&serverAddress, sizeof(serverAddress)) < 0) {
+        perror("connect");
+        return false;
+    }
+
+    connected = true;
+    return true;
+}
+
+bool ClientSocket::login(const std::string& user, const std::string& password) {
+    if (!connected) return false;
+
+    std::string msg = "LOGIN " + user + " " + password;
+    send(sockfd, msg.c_str(), msg.size(), 0);
+
+    char buffer[256];
+    int bytes = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
+    if (bytes <= 0) return false;
+
+    buffer[bytes] = '\0';
+    std::string reply(buffer);
+
+    if (reply.find("LOGIN OK") == 0) {
+        logged_in = true;
+        username = user;
+        return true;
+    }
+
+    return false;
+}
+
+
+bool ClientSocket::sendMessage(const std::string& msg) {
+    if (!connected || !logged_in) return false;
+
+    std::string full = "MSG " + msg;
+    send(sockfd, full.c_str(), full.size(), 0);
+    return true;
+}
+

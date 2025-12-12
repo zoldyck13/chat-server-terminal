@@ -25,8 +25,11 @@ int main(){
 
         if (clientMessage == "exit") break;
 
+        std::cout << "Client fd: " << clinetSocket << std::endl;
+
         send(clinetSocket, clientMessage.c_str(), clientMessage.length(), 0);
     }
+
 
     close(clinetSocket);
     return 0;

@@ -2,14 +2,21 @@
 #include <ftxui/component/component.hpp>
 #include "../include/client/Register.hpp"
 #include "../include/client/Menu.hpp"
+#include "../include/client/ClientSocket.hpp"
 #include <thread>
 
 
 int main() {
 
-    ScreenInteractive screen = ScreenInteractive::Fullscreen();
-    InitializeDb();
 
+    auto& client = ClientSocket::getInstace();
+
+    if (!client.connectToServer()) {
+        std::cerr << "Cannot connect to server\n";
+        return 1;
+    }
+
+    ScreenInteractive screen = ScreenInteractive::Fullscreen();
     int page = 0;
 
     Login login_page;
@@ -27,9 +34,10 @@ int main() {
     login_page.onLog = [&]{
         page =2;
 
-        menu_page.setUsername(login_page.getUser());
-
-        screen.PostEvent(Event::Custom);
+        menu_page.setUsername(
+            ClientSocket::getInstace().getUsername()
+        );
+                screen.PostEvent(Event::Custom);
     };
 
     login_page.onRegister = [&] {
