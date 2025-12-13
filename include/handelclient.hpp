@@ -236,6 +236,11 @@ public:
 
         addLog("Server loop stopped.");
     }
+
+    bool getClientActive() const {
+    return !clients.empty();
+    }
+
 };
 
 #endif

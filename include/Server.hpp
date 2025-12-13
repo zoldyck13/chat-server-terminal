@@ -59,6 +59,8 @@ public:
 
     void setPort(int p){ port = p;}
 
+    bool getClientActive() const;
+
 };
 
 #endif

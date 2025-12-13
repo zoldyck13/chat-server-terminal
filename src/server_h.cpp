@@ -53,6 +53,8 @@ bool Server::isRunning() const {
     return running && hc && hc->isRunning();
 }
 
+
+
 int Server::getClientCount() const {
     return hc ? hc->getClientCount() : 0;
 }
@@ -90,4 +92,8 @@ uint64_t Server::getBytesSent() const {
 
 uint64_t Server::getMessagesReceived() const {
     return hc ? hc->getMessagesReceived() : 0;
+}
+
+bool Server::getClientActive() const {
+    return hc && hc->getClientCount() > 0;
 }

@@ -55,15 +55,6 @@ int main() {
 
 
 
-
-    std::thread refresher([&] {
-        while (true) {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-            screen.PostEvent(Event::Custom);
-        }
-    });
-    refresher.detach();
-
     screen.Loop(container);
 
 
