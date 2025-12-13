@@ -174,7 +174,7 @@ public:
             auto logs = server.getLogs();
             int start = logs.size() > 100 ? logs.size() - 100 : 0;
             for (size_t i = start; i < logs.size(); ++i)
-                log_items.push_back(text(logs[i]));
+                log_items.push_back(paragraph(logs[i]));
 
             if (log_items.empty())
                 log_items.push_back(text("No logs"));

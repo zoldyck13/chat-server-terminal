@@ -56,13 +56,20 @@ public:
             std::vector<Element> elems;
             elems.reserve(messages.size());
             for (auto& m : messages)
-                elems.push_back(text(m));
+                elems.push_back(paragraph(m));
+
+            bool focused = input_box->Focused();
+
+            std::string shown_input = input;
+            if (focused)
+                shown_input += "▌";
 
             return vbox({
                 text(" Chat Room ") | bold | center,
                 separator(),
 
                 vbox(elems)
+                    |size(WIDTH, LESS_THAN, 80)
                     | frame
                     | vscroll_indicator
                     | size(HEIGHT, GREATER_THAN, 15)
@@ -71,10 +78,12 @@ public:
                 separator(),
 
                 hbox({
-                    input_box->Render() | flex,
+                    text("> "),
+                    text(shown_input) | flex,
                     text("  "),
                     text("[Enter to send | /quit]")
                 })
+                | border
             });
         });
     }

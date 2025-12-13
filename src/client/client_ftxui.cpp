@@ -1,9 +1,9 @@
-#include "../include/client/Login.hpp"
+#include "../../include/client/Login.hpp"
 #include <ftxui/component/component.hpp>
-#include "../include/client/Register.hpp"
-#include "../include/client/Menu.hpp"
-#include "../include/client/ClientSocket.hpp"
-#include "../include/client/ChatUI.hpp"
+#include "../../include/client/Register.hpp"
+#include "../../include/client/Menu.hpp"
+#include "../../include/client/ClientSocket.hpp"
+#include "../../include/client/ChatUI.hpp"
 #include <thread>
 #include <iostream>
 
@@ -61,7 +61,6 @@ int main() {
     if (idx == 0) {
         ClientSocket::getInstace().startReceiver();
         page = 3;
-        chat_page.FocusInput();            
     }
     screen.PostEvent(Event::Custom);
 };

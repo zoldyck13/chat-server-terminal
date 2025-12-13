@@ -1,10 +1,10 @@
-#include "../include/server/longin.hpp"
-#include "../include/server/Register.hpp"
-#include "../include/server/Menu.hpp"
-#include "../include/server/User.hpp"
-#include "../include/server/Settings.hpp"
-#include "../include/Server.hpp"
-#include "../include/server/Launch.hpp"
+#include "../../include/server/longin.hpp"
+#include "../../include/server/Register.hpp"
+#include "../../include/server/Menu.hpp"
+#include "../../include/server/User.hpp"
+#include "../../include/server/Settings.hpp"
+#include "../../include/Server.hpp"
+#include "../../include/server/Launch.hpp"
 
  
 int main() {
