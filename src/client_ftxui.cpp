@@ -4,6 +4,7 @@
 #include "../include/client/Menu.hpp"
 #include "../include/client/ClientSocket.hpp"
 #include <thread>
+#include <iostream>
 
 
 int main() {

@@ -8,154 +8,147 @@
 #include <ftxui/component/screen_interactive.hpp>
 #include <ftxui/screen/color.hpp>
 #include <ftxui/dom/elements.hpp>
+
 #include <string>
-#include "Dbclient.hpp"
+#include <functional>
+
+#include "../client/ClientSocket.hpp"
 
 using namespace ftxui;
 
 class Register {
 
-    private:
-        Component layout, username_edit, password_edit, confirm_password_edit, checkbox;
-        Component register_btn, back_btn;
+private:
+    Component layout;
+    Component username_edit, password_edit, confirm_password_edit, checkbox;
+    Component register_btn, back_btn;
 
-        std::string username, password, confirm_password;
+    std::string username, password, confirm_password;
+    std::string errMsg, confirm_message;
 
-        bool show_password = false;
+    bool show_password = false;
+    InputOption password_option;
 
-        InputOption password_option;
+public:
+    std::function<void()> onBack;
+    std::function<void()> onRegister;
 
-        std::string errMsg, confirm_message;
-    
-    public:
+    Register() {
 
-        std::function<void()> onBack;
-        std::function<void()> onRegister;
-        
-        Register() {
+        password_option.password = false;
 
-            password_option.password = false;
+        checkbox = Checkbox("show password", &show_password);
 
-            //Create check box
-            checkbox = Checkbox("show password", &show_password);
+        username_edit = Input(&username, "Enter Username");
+        password_edit = Input(&password, "Enter Password", password_option);
+        confirm_password_edit = Input(&confirm_password, "Confirm Password", password_option);
 
-            //Create Input
-            username_edit = Input(&username, "Enter Username");
-            password_edit = Input(&password, "Enter Password", password_option);
-            confirm_password_edit = Input(&confirm_password, "Confirm Password", password_option);
+        register_btn = Button("Register", [&] {
 
-            //Create button
-            register_btn = Button("Register", [&] {
-                if(onRegister) onRegister();
+            if (password != confirm_password) {
+                errMsg = "Passwords do not match";
+                return;
+            }
 
-                if(password == confirm_password){
-                    if(!insertUser(db, username, password))
-                        errMsg = "Something went wrong with register";
-                    else
-                        errMsg = "User register successfully";
-                } else {
-                    errMsg = "Passwords do not match";
+            auto& client = ClientSocket::getInstace();
+
+            if (!client.registerUser(username, password)) {
+                errMsg = "Register failed (server rejected)";
+                return;
+            }
+
+            errMsg = "User registered successfully";
+            if (onRegister) onRegister();
+        });
+
+        back_btn = Button("Back", [&] {
+            if (onBack) onBack();
+        });
+
+        auto container = Container::Vertical({
+            username_edit,
+            password_edit,
+            confirm_password_edit,
+            checkbox,
+            register_btn,
+            back_btn,
+        });
+
+        layout = Renderer(container, [&] {
+
+            InputOption opt;
+            opt.password = !show_password;
+            opt.on_change = [&] {
+                if (confirm_password.empty()) {
+                    confirm_message.clear();
+                    return;
                 }
+
+                confirm_message =
+                    (password == confirm_password)
+                        ? "✓ Passwords match"
+                        : "✗ Passwords do NOT match";
+            };
+
+            password_edit = Input(&password, "Enter Password", opt);
+            confirm_password_edit = Input(&confirm_password, "Confirm Password", opt);
+
+            auto title = text(" REGISTER PANEL ") | bold | center;
+
+            auto username_box = vbox({
+                text("Username") | color(Color::GrayLight),
+                username_edit->Render() | borderRounded,
             });
 
-
-            back_btn = Button("Back", [&] {
-                if(onBack) onBack();
+            auto password_box = vbox({
+                text("Password") | color(Color::GrayLight),
+                password_edit->Render() | borderRounded,
             });
 
-            auto container = Container::Vertical({
-                username_edit,
-                password_edit,
-                confirm_password_edit,
-                checkbox,
-                register_btn,
-                back_btn,
+            auto password_conf_box = vbox({
+                text("Rewrite Password") | color(Color::GrayLight),
+                confirm_password_edit->Render() | borderRounded,
             });
 
-            //Render the layout
-            layout = Renderer(container, [&] {
+            auto conf_msg =
+                confirm_message.empty()
+                    ? filler()
+                    : text(confirm_message)
+                        | ((password == confirm_password)
+                            ? color(Color::GreenLight)
+                            : color(Color::RedLight))
+                        | center | dim;
 
-                InputOption opt;
-                opt.password = !show_password;
-                opt.on_change = [&] {
-                    if (confirm_password.empty()) {
-                        confirm_message = "";
-                        return;
-                    }
+            auto error_msg =
+                errMsg.empty()
+                    ? filler()
+                    : text(errMsg) | color(Color::RedLight) | center | dim;
 
-                    if (password == confirm_password)
-                        confirm_message = "✓ Passwords match";
-                    else
-                        confirm_message = "✗ Passwords do NOT match";
-                };
+            auto card = vbox({
+                title,
+                separator(),
+                username_box,
+                password_box,
+                password_conf_box,
+                checkbox->Render(),
+                conf_msg,
+                separatorLight(),
+                register_btn->Render() | center | borderRounded,
+                separator(),
+                back_btn->Render() | center | borderRounded,
+                separator(),
+                error_msg,
+            }) | borderDouble | size(WIDTH, EQUAL, 50) | color(Color::Cyan);
 
-                password_edit = Input(&password, "Enter Password", opt);
-                confirm_password_edit = Input(&confirm_password, "Confirm Password", opt);
-
-                auto title = text(" REGISTER PANEL ") | bold | center;
-
-                auto username_box = vbox({
-                    text("Username") | color(Color::GrayLight),
-                    username_edit->Render() | borderRounded,
-                });
-
-                auto password_box = vbox({
-                    text("Password") | color(Color::GrayLight),
-                    password_edit->Render() | borderRounded,
-                });
-
-                auto password_conf_box = vbox({
-                    text("Rewrite Password") | color(Color::GrayLight),
-                    confirm_password_edit->Render() | borderRounded,
-                });
-
-                auto checkbox_row = hbox(checkbox->Render());
-
-                auto register_row =
-                    register_btn->Render() | center | borderRounded;
-
-                auto error_msg =
-                    errMsg.empty()
-                        ? filler()
-                        : text(errMsg) | color(Color::RedLight) | center | dim;
-
-                auto conf_msg =
-                    confirm_message.empty()
-                        ? filler()
-                        : text(confirm_message)
-                            | ((password == confirm_password)
-                                ? color(Color::GreenLight)
-                                : color(Color::RedLight))
-                            | center | dim;
-
-                auto back_row =
-                    back_btn->Render() | center | borderRounded;
-
-                auto card = vbox({
-                    title,
-                    separator(),
-                    username_box,
-                    password_box,
-                    password_conf_box,
-                    checkbox_row,
-                    conf_msg,
-                    separatorLight(),
-                    register_row,
-                    separator(),
-                    back_row,
-                    separator(),
-                    error_msg,
-                }) | borderDouble | size(WIDTH, EQUAL, 50) | color(Color::Cyan);
-
-                return vbox({
-                    filler(),
-                    card | center,
-                    filler()
-                });
+            return vbox({
+                filler(),
+                card | center,
+                filler()
             });
-        }
+        });
+    }
 
-        Component RenderRegister() { return layout; }
+    Component RenderRegister() { return layout; }
 };
 
 #endif

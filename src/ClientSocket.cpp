@@ -61,3 +61,26 @@ bool ClientSocket::sendMessage(const std::string& msg) {
     return true;
 }
 
+
+bool ClientSocket::registerUser(const std::string& username,
+                                const std::string& password)
+{
+    if (!connected)
+        return false;
+
+    std::string msg = "REGISTER " + username + " " + password + "\n";
+
+    if (send(sockfd, msg.c_str(), msg.size(), 0) <= 0)
+        return false;
+
+    char buffer[256];
+    int bytes = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
+    if (bytes <= 0)
+        return false;
+
+    buffer[bytes] = '\0';
+    std::string response(buffer);
+
+    return response.find("REGISTER OK") != std::string::npos;
+}
+

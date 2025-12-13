@@ -11,21 +11,25 @@
 
 #include <fstream>
 #include <sstream>
+#include <thread>
+#include <mutex>
+#include <vector>
+#include <algorithm>
 
-#include <regex>
 #include "../Server.hpp"
 
 using namespace ftxui;
 
+// ============================================================
+// SYSTEM METRICS (NO UI LOGIC HERE)
+// ============================================================
 
-static std::string GetCPUUsageString() {
-    // Very rough /proc/stat parsing (average, not perfect).
+static std::string ReadCPU() {
     static long long lastIdle = 0, lastTotal = 0;
 
     std::ifstream file("/proc/stat");
     std::string line;
-    if (!std::getline(file, line))
-        return "CPU: N/A";
+    if (!std::getline(file, line)) return "CPU: N/A";
 
     std::istringstream iss(line);
     std::string cpu;
@@ -42,42 +46,48 @@ static std::string GetCPUUsageString() {
     lastTotal = total;
     lastIdle = idleAll;
 
-    double cpu_percentage = 0.0;
+    int percent = 0;
     if (totald > 0)
-        cpu_percentage = (double)(totald - idled) / totald * 100.0;
+        percent = (int)((double)(totald - idled) / totald * 100.0);
 
-    std::ostringstream os;
-    os << "CPU: " << (int)cpu_percentage << "%";
-    return os.str();
+    return "CPU: " + std::to_string(percent) + "%";
 }
 
-static std::string GetRAMUsageString() {
+static std::string ReadRAM() {
     std::ifstream file("/proc/meminfo");
     if (!file.is_open()) return "RAM: N/A";
 
-    std::string key;
+    std::string key, unit;
     long long value;
-    std::string unit;
-    long long memTotal = 0, memAvailable = 0;
+    long long total = 0, avail = 0;
 
     while (file >> key >> value >> unit) {
-        if (key == "MemTotal:") memTotal = value;
+        if (key == "MemTotal:") total = value;
         if (key == "MemAvailable:") {
-            memAvailable = value;
+            avail = value;
             break;
         }
     }
 
-    if (memTotal == 0) return "RAM: N/A";
-
-    long long used = memTotal - memAvailable;
-
-    std::ostringstream os;
-    os << "RAM: " << used / 1024 << "MB / " << memTotal / 1024 << "MB";
-    return os.str();
+    long long used = total - avail;
+    return "RAM: " + std::to_string(used / 1024) + "MB / " +
+           std::to_string(total / 1024) + "MB";
 }
 
+// ============================================================
+// DASHBOARD STATE (THREAD-SAFE CACHE)
+// ============================================================
 
+struct DashboardState {
+    std::string cpu = "CPU: ?";
+    std::string ram = "RAM: ?";
+    std::string uptime = "Uptime: ?";
+    std::mutex mtx;
+};
+
+// ============================================================
+// LAUNCH SERVER UI
+// ============================================================
 
 class LaunchServer {
 
@@ -87,31 +97,21 @@ private:
     Component stop_button;
     Component restart_button;
     Component clear_logs_button;
-
     Component logs_checkbox;
     Component clients_checkbox;
 
     bool show_logs = true;
     bool show_clients = true;
 
+    DashboardState state;
+
 public:
-
     LaunchServer() {
-        back_button = Button("Back", [&] {
-            if (onBack) onBack();
-        });
 
-        stop_button = Button("Stop Server", [&] {
-            if (onStop) onStop();
-        });
-
-        restart_button = Button("Restart Server", [&] {
-            if (onRestart) onRestart();
-        });
-
-        clear_logs_button = Button("Clear Logs", [&] {
-            if (onClearLogs) onClearLogs();
-        });
+        back_button = Button("Back", [&] { if (onBack) onBack(); });
+        stop_button = Button("Stop Server", [&] { if (onStop) onStop(); });
+        restart_button = Button("Restart Server", [&] { if (onRestart) onRestart(); });
+        clear_logs_button = Button("Clear Logs", [&] { if (onClearLogs) onClearLogs(); });
 
         logs_checkbox = Checkbox("Show Logs", &show_logs);
         clients_checkbox = Checkbox("Show Clients", &show_clients);
@@ -125,64 +125,67 @@ public:
             clients_checkbox,
         });
 
+        // ==============================
+        // BACKGROUND MONITOR THREAD
+        // ==============================
+        std::thread([this] {
+            while (true) {
+                {
+                    std::lock_guard<std::mutex> lock(state.mtx);
+                    state.cpu = ReadCPU();
+                    state.ram = ReadRAM();
+                    state.uptime = Server::getInstace().getUptime();
+                }
+                std::this_thread::sleep_for(std::chrono::seconds(1));
+            }
+        }).detach();
+
+        // ==============================
+        // UI RENDERER (PURE RENDER)
+        // ==============================
         layout = Renderer(container, [&] {
+
             auto& server = Server::getInstace();
 
-            // heartbeat
             static bool beat = false;
             beat = !beat;
             std::string heart = beat ? "♥" : "♡";
 
-            // CPU/RAM
-            std::string cpu_str = GetCPUUsageString();
-            std::string ram_str = GetRAMUsageString();
-
-            // Clients list (IP-based)
-            std::vector<Element> client_list_elems;
-            int clientCount = server.getClientCount();
-            // If you later expose Server::getClients(), you can show IPs; for now just count
-            if (clientCount == 0) {
-                client_list_elems.push_back(text("No active clients"));
-            } else {
-                for (int i = 0; i < clientCount; ++i) {
-                    client_list_elems.push_back(text("Client #" + std::to_string(i + 1)));
-                }
+            // -------- COPY STATE SAFELY --------
+            std::string cpu, ram, uptime;
+            {
+                std::lock_guard<std::mutex> lock(state.mtx);
+                cpu = state.cpu;
+                ram = state.ram;
+                uptime = state.uptime;
             }
 
-            // Logs with colors (INFO/WARN/ERROR/etc)
+            // -------- CLIENT LIST --------
+            std::vector<Element> clients;
+            int count = server.getClientCount();
+            if (count == 0)
+                clients.push_back(text("No active clients"));
+            else
+                for (int i = 0; i < count; ++i)
+                    clients.push_back(text("Client #" + std::to_string(i + 1)));
+
+            // -------- LOGS (LIMITED) --------
             std::vector<Element> log_items;
-            for (auto& log : server.getLogs()) {
-                auto e = text(log);
-                std::string lower = log;
-                std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+            auto logs = server.getLogs();
+            int start = logs.size() > 100 ? logs.size() - 100 : 0;
+            for (size_t i = start; i < logs.size(); ++i)
+                log_items.push_back(text(logs[i]));
 
-                if (lower.find("error") != std::string::npos) {
-                    e |= color(Color::Red) | bold;
-                } else if (lower.find("disconnect") != std::string::npos) {
-                    e |= color(Color::Yellow);
-                } else if (lower.find("new client") != std::string::npos ||
-                        lower.find("connected") != std::string::npos) {
-                    e |= color(Color::Green);
-                } else {
-                    e |= color(Color::White);
-                }
-                log_items.push_back(e);
-            }
             if (log_items.empty())
-                log_items.push_back(text("No logs yet"));
+                log_items.push_back(text("No logs"));
 
-            // Traffic stats
-            uint64_t rx = server.getBytesReceived();
-            uint64_t tx = server.getBytesSent();
-            uint64_t msgs = server.getMessagesReceived();
-
-            // Build panels conditionally (collapsible)
+            // -------- PANELS --------
             Element clients_panel = text("");
             if (show_clients) {
                 clients_panel = vbox({
-                    text("Active Clients") | bold,
+                    text("Clients") | bold,
                     separator(),
-                    vbox(client_list_elems),
+                    vbox(clients),
                 }) | border | flex;
             }
 
@@ -191,49 +194,38 @@ public:
                 logs_panel = vbox({
                     text("Logs") | bold,
                     separator(),
-                    vbox(log_items) | vscroll_indicator | frame | size(HEIGHT, LESS_THAN, 15),
+                    vbox(log_items)
+                        | frame
+                        | vscroll_indicator
+                        | size(HEIGHT, LESS_THAN, 15),
                 }) | border | flex;
             }
 
-            // Layout
             return vbox({
 
+                text(" Server Dashboard ") | bold | center | border,
+
                 hbox({
-                    text(" Server Dashboard ") | bold | center | flex,
-                }) | border | color(Color::Blue),
+                    text("Status: "),
+                    text(server.isRunning() ? "RUNNING" : "STOPPED")
+                        | color(server.isRunning() ? Color::Green : Color::Red),
+                    text("   "),
+                    text(heart) | color(Color::Red),
+                    text("   Uptime: "),
+                    text(uptime),
+                }) | border,
 
-                // STATUS, CPU, RAM, TRAFFIC
-                vbox({
-                    hbox({
-                        text("Status: ") | bold,
-                        text(server.isRunning() ? "RUNNING" : "STOPPED") |
-                            color(server.isRunning() ? Color::Green : Color::Red) | bold,
-                        text("   "),
-                        text(heart) | color(Color::Red) | bold,
-                        text("   IP: ") | bold,
-                        text(server.getIP()),
-                        text("   Port: ") | bold,
-                        text(std::to_string(server.getPort())),
-                        text("   Uptime: ") | bold,
-                        text(server.getUptime()),
-                    }) | border,
-
-                    hbox({
-                        text(cpu_str),
-                        text("   "),
-                        text(ram_str),
-                        text("   RX: ") | bold,
-                        text(std::to_string(rx) + " bytes"),
-                        text("   TX: ") | bold,
-                        text(std::to_string(tx) + " bytes"),
-                        text("   Msgs: ") | bold,
-                        text(std::to_string(msgs)),
-                    }) | border,
-                }),
+                hbox({
+                    text(cpu),
+                    text("   "),
+                    text(ram),
+                    text("   RX: "), text(std::to_string(server.getBytesReceived())),
+                    text("   TX: "), text(std::to_string(server.getBytesSent())),
+                    text("   Msgs: "), text(std::to_string(server.getMessagesReceived())),
+                }) | border,
 
                 separator(),
 
-                // CLIENTS + LOGS
                 hbox({
                     clients_panel,
                     logs_panel,
@@ -241,12 +233,11 @@ public:
 
                 separator(),
 
-                // Controls + toggles
                 hbox({
-                    back_button->Render() | border,
-                    stop_button->Render() | border,
-                    restart_button->Render() | border,
-                    clear_logs_button->Render() | border,
+                    back_button->Render(),
+                    stop_button->Render(),
+                    restart_button->Render(),
+                    clear_logs_button->Render(),
                     text("  "),
                     logs_checkbox->Render(),
                     text("  "),
@@ -257,15 +248,13 @@ public:
         });
     }
 
-    public:
-        std::function<void()> onBack;
-        std::function<void()> onStop;
-        std::function<void()> onRestart;
-        std::function<void()> onClearLogs;
+public:
+    std::function<void()> onBack;
+    std::function<void()> onStop;
+    std::function<void()> onRestart;
+    std::function<void()> onClearLogs;
 
-        Component RenderLaunch() { return layout; }
-
-
+    Component RenderLaunch() { return layout; }
 };
 
 #endif

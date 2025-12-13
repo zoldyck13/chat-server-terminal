@@ -31,6 +31,8 @@ public:
     bool login(const std::string& username, const std::string& password);
     bool sendMessage(const std::string& msg);
     std::string receiveMessage();
+    bool registerUser(const std::string&, const std::string&);
+
 
     void closeConnection();
 };

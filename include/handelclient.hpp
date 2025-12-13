@@ -207,7 +207,7 @@ public:
 
                                 if (checkLogin(db, username, password)) {
 
-                                    c->username = username;       // ⭐ الاسم يُخزَّن هنا
+                                    c->username = username;    
                                     c->authenticated = true;
 
                                     addLog("SID " + std::to_string(c->sid) +
