@@ -197,9 +197,10 @@ public:
                     vbox(log_items)
                         | frame
                         | vscroll_indicator
-                        | size(HEIGHT, LESS_THAN, 15),
+                        | size(HEIGHT, EQUAL, 15)
                 }) | border | flex;
             }
+
 
             return vbox({
 

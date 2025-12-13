@@ -7,9 +7,12 @@
 #include <thread>
 #include <atomic>
 
+#include "ChatState.hpp"
+
+
 class ClientSocket {
 
-    ChatState chat;
+    ChatState chat_state;
     std::function<void()> onChatUpdate;
     std::function<void(const std::string&)> onMessage;
     std::thread recv_thread;
@@ -47,9 +50,11 @@ public:
     void startReceiver();
     void stopReceiver();
     void sendChat(const std::string& msg);
-    ChatState& getChatState() { return chat; }
-    void setOnChatUpdate(std::function<void()> cb) { onChatUpdate = cb; }
+    ChatState& getChatState() { return chat_state; }
 
+    void setOnChatUpdate(std::function<void()> cb) {
+        onChatUpdate = std::move(cb);
+    }
 
 
     void closeConnection();

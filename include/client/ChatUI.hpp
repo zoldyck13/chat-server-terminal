@@ -29,7 +29,6 @@ public:
 
         input_box = Input(&input, "Type message...");
 
-        // ✅ الطريقة الأكثر توافقًا بدل |=
         input_box = CatchEvent(input_box, [&](Event e) {
             if (e == Event::Return && !input.empty()) {
 
@@ -41,11 +40,13 @@ public:
                 }
 
                 client.sendChat(input);
+
                 input.clear();
                 return true;
             }
             return false;
         });
+
 
         container = Container::Vertical({ input_box });
 

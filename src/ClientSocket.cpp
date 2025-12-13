@@ -92,16 +92,31 @@ void ClientSocket::startReceiver() {
     receiving = true;
     recv_thread = std::thread([this] {
         char buffer[512];
+        std::string pending;   
         while (receiving) {
             int bytes = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
-            if (bytes <= 0) break;
+            if (bytes <= 0)
+                break;
 
             buffer[bytes] = '\0';
-            if (onMessage)
-                onMessage(buffer);
+            pending += buffer;
+
+            size_t pos;
+            while ((pos = pending.find('\n')) != std::string::npos) {
+                std::string line = pending.substr(0, pos);
+                pending.erase(0, pos + 1);
+
+                if (!line.empty())
+                    chat_state.addMessage(line);
+
+                if (onChatUpdate)
+                    onChatUpdate();
+            }
         }
     });
 }
+
+
 
 
 

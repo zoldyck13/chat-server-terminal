@@ -196,39 +196,64 @@ public:
 
                         std::string msg(buffer);
 
-                        // ================= LOGIN =================
-                        if (!c->authenticated) {
+                        // ================= REGISTER =================
+                        if (msg.rfind("REGISTER ", 0) == 0) {
 
-                            if (msg.find("LOGIN ") == 0) {
+                            std::istringstream iss(msg);
+                            std::string cmd, username, password;
+                            iss >> cmd >> username >> password;
 
-                                std::istringstream iss(msg);
-                                std::string cmd, username, password;
-                                iss >> cmd >> username >> password;
-
-                                if (checkLogin(db, username, password)) {
-
-                                    c->username = username;    
-                                    c->authenticated = true;
-
-                                    addLog("SID " + std::to_string(c->sid) +
-                                        " logged in as " + username);
-
-                                    send(sock, "LOGIN OK\n", 9, 0);
-
-                                } else {
-                                    send(sock, "LOGIN FAILED\n", 13, 0);
-                                }
-
+                            if (insertUser(db, username, password)) {
+                                send(sock, "REGISTER OK\n", 12, 0);
+                                addLog("New user registered: " + username);
                             } else {
-                                send(sock, "Please login first\n", 19, 0);
+                                send(sock, "REGISTER FAILED\n", 16, 0);
                             }
-
                             continue;
                         }
 
-                        int sent = send(sock, buffer, bytes, 0);
-                        if (sent > 0)
-                            bytes_sent += sent;
+                        // ================= LOGIN =================
+                        if (!c->authenticated && msg.rfind("LOGIN ", 0) == 0) {
+
+                            std::istringstream iss(msg);
+                            std::string cmd, username, password;
+                            iss >> cmd >> username >> password;
+
+                            if (checkLogin(db, username, password)) {
+                                c->username = username;
+                                c->authenticated = true;
+
+                                addLog("SID " + std::to_string(c->sid) +
+                                    " logged in as " + username);
+
+                                send(sock, "LOGIN OK\n", 9, 0);
+                            } else {
+                                send(sock, "LOGIN FAILED\n", 13, 0);
+                            }
+                            continue;
+                        }
+
+                        // ================= BLOCK UNAUTH =================
+                        if (!c->authenticated) {
+                            send(sock, "Please login first\n", 19, 0);
+                            continue;
+                        }
+
+                        // ================= CHAT =================
+                        if (msg.rfind("MSG ", 0) == 0) {
+
+                            std::string text = msg.substr(4);
+                            if (text.empty()) continue;
+
+                            std::string full_msg = c->username + ": " + text + "\n";
+                            addLog(full_msg);
+
+                            std::lock_guard<std::mutex> lock(clients_mutex);
+                            for (auto& client : clients) {
+                                send(client.fd, full_msg.c_str(), full_msg.size(), 0);
+                            }
+                        }
+
                     }
                 }
             }

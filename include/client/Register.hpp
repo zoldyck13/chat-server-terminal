@@ -43,23 +43,23 @@ public:
         password_edit = Input(&password, "Enter Password", password_option);
         confirm_password_edit = Input(&confirm_password, "Confirm Password", password_option);
 
-        register_btn = Button("Register", [&] {
-
+        register_btn = Button("Register", [&]{
             if (password != confirm_password) {
-                errMsg = "Passwords do not match";
+                errMsg = "Unmatch Password";
                 return;
             }
 
             auto& client = ClientSocket::getInstace();
 
             if (!client.registerUser(username, password)) {
-                errMsg = "Register failed (server rejected)";
+                errMsg = "Server rejected register";
                 return;
             }
 
-            errMsg = "User registered successfully";
-            if (onRegister) onRegister();
+            errMsg = "";
+            if (onBack) onBack(); 
         });
+
 
         back_btn = Button("Back", [&] {
             if (onBack) onBack();
