@@ -3,6 +3,7 @@
 #include "../include/client/Register.hpp"
 #include "../include/client/Menu.hpp"
 #include "../include/client/ClientSocket.hpp"
+#include "../include/client/ChatUI.hpp"
 #include <thread>
 #include <iostream>
 
@@ -20,6 +21,7 @@ int main() {
     ScreenInteractive screen = ScreenInteractive::Fullscreen();
     int page = 0;
 
+    ChatUI chat_page(screen);
     Login login_page;
     Register register_page;
     ClientMenu menu_page;
@@ -28,6 +30,8 @@ int main() {
         login_page.RenderLogin(),
         register_page.RenderRegister(),
         menu_page.RenderMenu(),
+        chat_page.Render(),
+
 
     }, &page);
 
@@ -53,9 +57,30 @@ int main() {
         screen.PostEvent(Event::Custom);
     };
 
+   menu_page.onSelect = [&](int idx) {
+    if (idx == 0) {
+        ClientSocket::getInstace().startReceiver();
+        page = 3;
+        chat_page.FocusInput();            
+    }
+    screen.PostEvent(Event::Custom);
+};
+
+
+    chat_page.onQuit = [&] {
+        page = 2;
+        screen.PostEvent(Event::Custom);
+    };
+
+
+
+
 
 
     screen.Loop(container);
+
+    ClientSocket::getInstace().stopReceiver();
+
 
 
     return 0;

@@ -2,8 +2,19 @@
 #define __FTXUI_CLIENTSOCKET
 
 #include <string>
+#include "ChatState.hpp"
+#include <functional>
+#include <thread>
+#include <atomic>
 
 class ClientSocket {
+
+    ChatState chat;
+    std::function<void()> onChatUpdate;
+    std::function<void(const std::string&)> onMessage;
+    std::thread recv_thread;
+    std::atomic<bool> receiving{false};
+
 private:
     int sockfd;
     int port;
@@ -32,6 +43,13 @@ public:
     bool sendMessage(const std::string& msg);
     std::string receiveMessage();
     bool registerUser(const std::string&, const std::string&);
+
+    void startReceiver();
+    void stopReceiver();
+    void sendChat(const std::string& msg);
+    ChatState& getChatState() { return chat; }
+    void setOnChatUpdate(std::function<void()> cb) { onChatUpdate = cb; }
+
 
 
     void closeConnection();

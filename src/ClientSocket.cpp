@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <thread>
 
 ClientSocket::ClientSocket(int port)
     : port(port) {
@@ -83,4 +84,39 @@ bool ClientSocket::registerUser(const std::string& username,
 
     return response.find("REGISTER OK") != std::string::npos;
 }
+
+
+void ClientSocket::startReceiver() {
+    if (receiving) return;
+
+    receiving = true;
+    recv_thread = std::thread([this] {
+        char buffer[512];
+        while (receiving) {
+            int bytes = recv(sockfd, buffer, sizeof(buffer) - 1, 0);
+            if (bytes <= 0) break;
+
+            buffer[bytes] = '\0';
+            if (onMessage)
+                onMessage(buffer);
+        }
+    });
+}
+
+
+
+void ClientSocket::stopReceiver() {
+    receiving = false;
+    if (recv_thread.joinable())
+        recv_thread.join();
+}
+
+
+void ClientSocket::sendChat(const std::string& msg) {
+    if (!connected || !logged_in) return;
+    std::string out = "MSG " + msg + "\n";
+    send(sockfd, out.c_str(), out.size(), 0);
+}
+
+
 

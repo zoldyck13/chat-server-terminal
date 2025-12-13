@@ -32,13 +32,13 @@ class ClientMenu {
     public:
     int select = 0;
     MenuOption option;
-    std::function<void()> onSelect;
+    std::function<void(int)> onSelect;
 
     ClientMenu() {
 
         option = MenuOption::Vertical();
         option.on_enter = [&] {
-            if (onSelect) onSelect();
+            if (onSelect) onSelect(select);
         };
 
         menu = Menu(&entries, &select, option);
