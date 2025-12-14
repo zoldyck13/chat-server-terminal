@@ -12,8 +12,8 @@ LIBS = -lsqlite3
 # ----------------------------
 # Source files per target
 # ----------------------------
-SERVER_SRC = server/mainServer.cpp server/Server.cpp server/Dbserver.cpp
-CLIENT_SRC = client/client_ftxui.cpp client/ClientSocket.cpp
+SERVER_SRC = src/server/mainServer.cpp src/server/Server.cpp src/server/Dbserver.cpp
+CLIENT_SRC = src/client/client_ftxui.cpp src/client/ClientSocket.cpp
 
 SERVER_OUT = server.out
 CLIENT_OUT = clientui.out
