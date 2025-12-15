@@ -56,6 +56,10 @@ public:
         onChatUpdate = std::move(cb);
     }
 
+    bool reconnect();
+    bool isConnected() const;
+
+
 
     void closeConnection();
 };

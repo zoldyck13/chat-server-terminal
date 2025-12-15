@@ -121,9 +121,31 @@ void ClientSocket::startReceiver() {
 
 
 void ClientSocket::stopReceiver() {
+    if (!receiving)
+        return;
+
     receiving = false;
+    shutdown(sockfd, SHUT_RDWR);
+
     if (recv_thread.joinable())
         recv_thread.join();
+
+    close(sockfd);
+    sockfd = -1;
+    connected = false;
+    logged_in = false;
+}
+
+
+bool ClientSocket::reconnect() {
+    if (sockfd != -1)
+        close(sockfd);
+
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd < 0)
+        return false;
+
+    return connectToServer();
 }
 
 
@@ -132,6 +154,12 @@ void ClientSocket::sendChat(const std::string& msg) {
     std::string out = "MSG " + msg + "\n";
     send(sockfd, out.c_str(), out.size(), 0);
 }
+
+
+bool ClientSocket::isConnected() const {
+    return connected && sockfd >= 0;
+}
+
 
 
 

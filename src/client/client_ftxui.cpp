@@ -59,9 +59,19 @@ int main() {
 
    menu_page.onSelect = [&](int idx) {
     if (idx == 0) {
-        ClientSocket::getInstace().startReceiver();
+        auto& client = ClientSocket::getInstace();
+
+        if (!client.isConnected()) {
+            if (!client.reconnect()) {
+
+                return;
+            }
+        }
+
+        client.startReceiver();   
         page = 3;
     }
+    
     screen.PostEvent(Event::Custom);
 };
 
