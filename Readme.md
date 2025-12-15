@@ -156,7 +156,7 @@ Make sure you have the following installed on you system:
 
 - [pkg-config]()
 
-- Linux-based system (Arch, Debian, Ubuntu, WSL) or Unix-like environment (Linux, [WSL](https://learn.microsoft.com/en-us/windows/wsl/install))
+- Linux-based system (Arch, Debian, Ubuntu, WSL)
 
 
   
